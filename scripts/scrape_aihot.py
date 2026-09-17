@@ -57,7 +57,8 @@ AI_MODEL_NAME = "google/gemini-3-flash-preview"
 
 # Global Headers
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Accept': 'application/rss+xml,application/xml,text/xml,text/html,*/*'
 }
 
 # Feature Flags
@@ -474,6 +475,56 @@ def generate_html_report(items, output_dir):
     except Exception as e:
         print(f"Error generating HTML report: {e}")
 
+# Selection focus profiles. Switch with env CONTENT_FOCUS or "focus" in resources/content_curator_sources.json.
+FOCUS_PROFILES = {
+    "finance": {
+        "label": "财经/商业",
+        "reader": """目标读者：
+- 关注商业、财经、投资与职业发展的中国读者：管理者、创业者、投资人、知识工作者、内容创作者。
+- 他们不关心技术参数本身，关心钱怎么赚、行业格局怎么变，以及这些变化对个人职业和资产的实际影响。""",
+        "priorities": [
+            "具体公司或行业的商业逻辑：财报、商业模式、定价、单位经济模型、增长与衰退，必须带真实数字。",
+            "金融科技与资本市场：支付、借贷、财富管理、稳定币、AI 在金融业的落地，以及融资、上市、并购背后的判断。",
+            "AI 对商业竞争、就业、生产力与组织管理的实际影响，必须落到企业经营或普通人的职业选择，而不是技术参数。",
+            "战略或管理的独立判断、反常识结论、研究结论（平台战略、SaaS 运营、管理学研究），要有事实与数据支撑。",
+        ],
+        "exclusions": [
+            "纯技术细节、模型参数、跑分、开源库小版本更新等没有商业含义的内容。",
+            "纯融资快讯、榜单搬运、没有事实依据的预测。",
+            "商业通稿、标题党，以及「今日热点」「Weekly Review」这类多事件合集。",
+        ],
+    },
+    "ai": {
+        "label": "AI/科技",
+        "reader": """目标读者：
+- 中国非技术型 AI 使用者、知识工作者、管理者、内容创作者，以及关注就业和教育的普通读者。
+- 他们不关心技术参数本身，关心 AI 对工作、生活、效率、职业和未来的实际影响。""",
+        "priorities": [
+            "真实 AI 产品、Agent、Codex、Skill 或工作流案例，有具体场景、使用方法和可量化结果。",
+            "AI 对就业、教育、办公、知识、个人效率或决策的实际影响，能引出普通人的应对方法。",
+            "聚焦单一具体事件，同时具备强冲突、反常识、社会争议、鲜明数字或重大变化，并且有足够事实支撑深入解读。",
+            "知名公司、产品或人物之间的比较、排名变化或竞争，但必须说明对用户的实际价值。",
+        ],
+        "exclusions": [
+            "太过于晦涩、技术细节过深、普通人完全看不懂的内容。",
+            "纯模型参数、跑分、融资快讯、榜单搬运或对用户无明确价值的小版本更新。",
+            "纯粹商业通稿、缺少事实证据的预测或无实质内容的标题党。有真实使用场景、数据和独立判断的产品内容不属于此类。",
+            "「今日热点」、「Weekly Review」等多事件新闻合集。",
+        ],
+    },
+}
+DEFAULT_FOCUS = "finance"
+
+def load_focus():
+    """Focus profile name: env CONTENT_FOCUS > config "focus" > DEFAULT_FOCUS."""
+    env_focus = os.getenv('CONTENT_FOCUS', '').strip().lower()
+    if env_focus in FOCUS_PROFILES:
+        return env_focus
+    config_focus = str(load_rss_config().get('focus', '')).strip().lower()
+    if config_focus in FOCUS_PROFILES:
+        return config_focus
+    return DEFAULT_FOCUS
+
 def call_ai_selection(items, top_n=SELECTION_COUNT):
     """
     Call AI to select top N items.
@@ -490,8 +541,14 @@ def call_ai_selection(items, top_n=SELECTION_COUNT):
         candidates_text += f"Content: {item['content']}\n"
         candidates_text += "-" * 20 + "\n"
     
+    profile = FOCUS_PROFILES[load_focus()]
+    print(f"Selection focus: {profile['label']}")
+    priorities_block = "\n".join(f"{i}. {p}" for i, p in enumerate(profile['priorities'], 1))
+    priorities_block += f"\n{len(profile['priorities']) + 1}. 同等质量下，优先发布于最近 {RECENT_PRIORITY_DAYS} 天的内容。普通时效新闻原则上不超过 {GENERAL_LOOKBACK_DAYS} 天；超过 {GENERAL_LOOKBACK_DAYS} 天的内容只有在实操、深度认知或长期影响明显更强时才可入选，最长不超过 {MAX_LOOKBACK_DAYS} 天。"
+    exclusions_block = "\n".join(f"- {e}" for e in profile['exclusions'])
+    
     prompt = f"""
-你是一个专业的 AI 热点内容主编。请从以下列表中挑选出前 {top_n} 个最值得做成中文深度文章的选题。
+你是一个专业的{profile['label']}热点内容主编。请从以下列表中挑选出前 {top_n} 个最值得做成中文深度文章的选题。
 
 **今天是：{datetime.now().strftime('%Y-%m-%d')}**
 
@@ -500,26 +557,17 @@ def call_ai_selection(items, top_n=SELECTION_COUNT):
 - **中间的六个省略号（......）代表了文章中间被省略的部分**。
 - 请务必阅读 `Content` 字段来判断文章是否有实质性内容（干货），不要仅凭标题判断。如果 Content 为空或看起来是毫无意义的占位符，请直接忽略该文章。
 
-目标读者：
-- 中国非技术型 AI 使用者、知识工作者、管理者、内容创作者，以及关注就业和教育的普通读者。
-- 他们不关心技术参数本身，关心 AI 对工作、生活、效率、职业和未来的实际影响。
+{profile['reader']}
 
 优先选题：
-1. 真实 AI 产品、Agent、Codex、Skill 或工作流案例，有具体场景、使用方法和可量化结果。
-2. AI 对就业、教育、办公、知识、个人效率或决策的实际影响，能引出普通人的应对方法。
-3. 聚焦单一具体事件，同时具备强冲突、反常识、社会争议、鲜明数字或重大变化，并且有足够事实支撑深入解读。
-4. 知名公司、产品或人物之间的比较、排名变化或竞争，但必须说明对用户的实际价值。
-5. 同等质量下，优先发布于最近 {RECENT_PRIORITY_DAYS} 天的内容。普通时效新闻原则上不超过 {GENERAL_LOOKBACK_DAYS} 天；超过 {GENERAL_LOOKBACK_DAYS} 天的内容只有在实操、深度认知或长期影响明显更强时才可入选，最长不超过 {MAX_LOOKBACK_DAYS} 天。
+{priorities_block}
 
 **排除标准**：
-- 排除太过于晦涩、技术细节过深、普通人完全看不懂的内容。
-- 排除纯模型参数、跑分、融资快讯、榜单搬运或对用户无明确价值的小版本更新。
-- 排除纯粹商业通稿、缺少事实证据的预测或无实质内容的标题党。有真实使用场景、数据和独立判断的产品内容不属于此类。
-- 排除“今日热点”、“Weekly Review”等多事件新闻合集。
+{exclusions_block}
 
 **额外要求**：
 - 避免选择重复的文章（不同平台描述同个事务的文章），如有，选择相对内容最全面的那一篇。
-- {top_n} 个结果应尽量覆盖实操案例、普通人影响、认知升级、社会争议或产品竞争中的不同角度，但不得为多样性牺牲质量。
+- {top_n} 个结果应尽量覆盖案例、影响、认知升级、争议、竞争等不同角度，但不得为多样性牺牲质量。
 
 请仔细阅读上述内容，挑选出 {top_n} 个 ID。
 **输出格式要求**：
@@ -600,7 +648,7 @@ def scrape_aihot():
 
     url = 'https://aihot.today/'
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': HEADERS['User-Agent']
     }
     
     ignored_platforms = {

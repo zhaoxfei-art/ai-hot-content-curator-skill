@@ -1,11 +1,31 @@
 ---
 name: ai-hot-content-curator
-description: 一个用于发现、筛选和研究AI/科技及个人成长领域自媒体热门选题的技能。本 SKILL 只用于选题，写自媒体文案、写 C 哥日课等任何内容实际创作都不能使用这个 SKILL。
+description: 一个用于发现、筛选和研究 AI/科技与财经/商业领域自媒体热门选题的技能。本 SKILL 只用于选题，写自媒体文案、写 C 哥日课等任何内容实际创作都不能使用这个 SKILL。
 ---
 
 # ai-hot-content-curator
 
-此技能旨在帮助发现、筛选和深度分析热门的自媒体内容的潜在选题。它专注于从网上获取热门最新新闻，然后聚焦于AI、科技、个人成长和“一人公司”等主题。
+此技能旨在帮助发现、筛选和深度分析热门的自媒体内容的潜在选题。它专注于从网上获取热门最新新闻，然后聚焦于 AI、科技、财经/商业和“一人公司”等主题。
+
+## 选题方向 (Focus)
+
+`resources/content_curator_sources.json` 的 `focus` 字段决定筛选逻辑，当前为 `finance`（财经/商业）。
+
+- `finance`：财报、商业模式、金融科技、资本市场、SaaS 运营、AI 的商业影响。
+- `ai`：AI 产品与工作流案例、AI 对普通人的影响。
+
+临时切换：设置环境变量 `CONTENT_FOCUS=ai`（或 `finance`），优先级高于配置文件。
+
+财经方向的固定来源，已写入配置的「财经/商业深度」分组：
+
+| 来源 | RSS |
+| --- | --- |
+| The Diff | `https://www.thediff.co/archive/rss` |
+| Stratechery | `https://stratechery.com/feed/` |
+| MIT Sloan Management Review | `https://sloanreview.mit.edu/feed/` |
+| SaaStr | `https://www.saastr.com/feed/` |
+| TechCrunch Fintech | `https://techcrunch.com/category/fintech/feed/` |
+| Fintech Blueprint | `https://lex.substack.com/feed` |
 
 ## 工作流
 

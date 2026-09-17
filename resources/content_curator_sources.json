@@ -1,6 +1,18 @@
 {
     "sources": [
         {
+            "category": "财经/商业深度 (Finance & Business)",
+            "type": "RSS",
+            "urls": [
+                "https://www.thediff.co/archive/rss",
+                "https://stratechery.com/feed/",
+                "https://sloanreview.mit.edu/feed/",
+                "https://www.saastr.com/feed/",
+                "https://techcrunch.com/category/fintech/feed/",
+                "https://lex.substack.com/feed"
+            ]
+        },
+        {
             "category": "AI Podcasts & Interviews",
             "type": "RSS",
             "urls": [
@@ -54,7 +66,6 @@
             "urls": [
                 "http://feeds.feedburner.com/TechCrunch/",
                 "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
-                "https://stratechery.com/feed/",
                 "https://www.oneusefulthing.org/feed",
                 "https://www.lennysnewsletter.com/feed",
                 "https://news.smol.ai/rss.xml",
@@ -78,6 +89,7 @@
             ]
         }
     ],
+    "focus": "finance",
     "search_params": {
         "time_range": "last_week",
         "include_timeless": true
