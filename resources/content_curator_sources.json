@@ -13,6 +13,19 @@
             ]
         },
         {
+            "category": "企业 IT 与财务决策 (Enterprise IT & Finance)",
+            "type": "RSS",
+            "urls": [
+                "https://www.ciodive.com/feeds/news/",
+                "https://www.cfodive.com/feeds/news/",
+                "https://www.computerworld.com/index.rss",
+                "https://www.theregister.com/headlines.atom",
+                "https://www.infoq.cn/feed",
+                "https://dedicated.wallstreetcn.com/rss.xml",
+                "https://www.economist.com/finance-and-economics/rss.xml"
+            ]
+        },
+        {
             "category": "AI Podcasts & Interviews",
             "type": "RSS",
             "urls": [
@@ -89,7 +102,7 @@
             ]
         }
     ],
-    "focus": "finance",
+    "focus": "consulting",
     "search_params": {
         "time_range": "last_week",
         "include_timeless": true

@@ -64,10 +64,10 @@ HEADERS = {
 # Feature Flags
 ENABLE_RSS = os.getenv('ENABLE_RSS', 'true').lower() == 'true'
 RSS_CONFIG_REL_PATH = "../resources/content_curator_sources.json"
-MAX_LOOKBACK_DAYS = 60
-GENERAL_LOOKBACK_DAYS = 45
-RECENT_PRIORITY_DAYS = 7
-SELECTION_COUNT = 5
+MAX_LOOKBACK_DAYS = 30
+GENERAL_LOOKBACK_DAYS = 14
+RECENT_PRIORITY_DAYS = 3
+SELECTION_COUNT = 3
 
 def truncate_text(text, max_len=800):
     if not text:
@@ -475,45 +475,45 @@ def generate_html_report(items, output_dir):
     except Exception as e:
         print(f"Error generating HTML report: {e}")
 
-# Selection focus profiles. Switch with env CONTENT_FOCUS or "focus" in resources/content_curator_sources.json.
+# 选题标准：反向拆解自对标账号两篇样本（2026-09-14、2026-09-15）。
+# 样本共性：一天一篇、一篇只讲一件事、有一手材料与硬数字、落到产业竞争格局和「你该怎么办」。
+READER = """目标读者：
+- 企业管理者、IT 与数字化负责人（CIO、信息化、数据、财务条线），以及管理咨询顾问和企业数字化规划从业者。
+- 关注 AI 与产业变化如何影响企业投入、组织和个人职业的决策者。
+- 他们要的不是「发生了什么」，而是「为什么会这样、对企业和个人意味着什么、现在该做什么」。"""
+
+EXCLUSIONS = [
+    "多事件合集：今日热点、周报、月度盘点、榜单搬运。",
+    "纯模型参数、跑分、论文细节、开源项目小版本更新等与决策无关的技术内容。",
+    "只有融资数字、没有商业逻辑拆解的快讯。",
+    "企业通稿、发布会通稿改写、缺少数据支撑的观点或预测。",
+    "缺少独立判断的翻译稿，以及标题党。",
+]
+
+# 切换方式：环境变量 CONTENT_FOCUS，或 resources/content_curator_sources.json 的 focus 字段。
 FOCUS_PROFILES = {
-    "finance": {
-        "label": "财经/商业",
-        "reader": """目标读者：
-- 关注商业、财经、投资与职业发展的中国读者：管理者、创业者、投资人、知识工作者、内容创作者。
-- 他们不关心技术参数本身，关心钱怎么赚、行业格局怎么变，以及这些变化对个人职业和资产的实际影响。""",
+    "consulting": {
+        "label": "企业数字化与 IT 规划",
         "priorities": [
-            "具体公司或行业的商业逻辑：财报、商业模式、定价、单位经济模型、增长与衰退，必须带真实数字。",
-            "金融科技与资本市场：支付、借贷、财富管理、稳定币、AI 在金融业的落地，以及融资、上市、并购背后的判断。",
-            "AI 对商业竞争、就业、生产力与组织管理的实际影响，必须落到企业经营或普通人的职业选择，而不是技术参数。",
-            "战略或管理的独立判断、反常识结论、研究结论（平台战略、SaaS 运营、管理学研究），要有事实与数据支撑。",
-        ],
-        "exclusions": [
-            "纯技术细节、模型参数、跑分、开源库小版本更新等没有商业含义的内容。",
-            "纯融资快讯、榜单搬运、没有事实依据的预测。",
-            "商业通稿、标题党，以及「今日热点」「Weekly Review」这类多事件合集。",
+            "单一事件深挖：官方博客、财报、发布会、权威调研里的一手材料，能引用具体数字、时间点和金额。",
+            "企业 IT 投入与数字化规划：IT 预算怎么花、系统替换或重构（ERP、数据平台、中台）、自建还是采购、AI 项目的成本与 ROI。",
+            "AI 在企业里的真实落地：哪个环节被替代、组织和岗位怎么变、哪里踩坑，要有可验证的细节。",
+            "产业竞争格局变化：谁和谁在同一个战场上正面对撞，入口、平台或供给关系怎么迁移。",
+            "有反常识或强判断的结论，并能落到企业该怎么投入、个人该补什么能力。",
         ],
     },
-    "ai": {
-        "label": "AI/科技",
-        "reader": """目标读者：
-- 中国非技术型 AI 使用者、知识工作者、管理者、内容创作者，以及关注就业和教育的普通读者。
-- 他们不关心技术参数本身，关心 AI 对工作、生活、效率、职业和未来的实际影响。""",
+    "finance": {
+        "label": "财务与商业",
         "priorities": [
-            "真实 AI 产品、Agent、Codex、Skill 或工作流案例，有具体场景、使用方法和可量化结果。",
-            "AI 对就业、教育、办公、知识、个人效率或决策的实际影响，能引出普通人的应对方法。",
-            "聚焦单一具体事件，同时具备强冲突、反常识、社会争议、鲜明数字或重大变化，并且有足够事实支撑深入解读。",
-            "知名公司、产品或人物之间的比较、排名变化或竞争，但必须说明对用户的实际价值。",
-        ],
-        "exclusions": [
-            "太过于晦涩、技术细节过深、普通人完全看不懂的内容。",
-            "纯模型参数、跑分、融资快讯、榜单搬运或对用户无明确价值的小版本更新。",
-            "纯粹商业通稿、缺少事实证据的预测或无实质内容的标题党。有真实使用场景、数据和独立判断的产品内容不属于此类。",
-            "「今日热点」、「Weekly Review」等多事件新闻合集。",
+            "单一事件深挖：财报、招股书、并购公告、监管文件里的一手材料，能引用具体数字与时间点。",
+            "财务数字化：司库、预算与预测、财务共享中心、费用与税务流程的自动化，以及 AI 在财务职能里的真实落地与成本变化。",
+            "商业模式与单位经济：定价、毛利结构、现金流、增长与衰退背后的机制，而不是只讲涨跌。",
+            "资本市场与金融科技：支付、借贷、财富管理、稳定币的竞争与监管变化，以及融资、上市、并购背后的判断。",
+            "有反常识或强判断的结论，并能落到企业和个人的资产、职业、投入决策。",
         ],
     },
 }
-DEFAULT_FOCUS = "finance"
+DEFAULT_FOCUS = "consulting"
 
 def load_focus():
     """Focus profile name: env CONTENT_FOCUS > config "focus" > DEFAULT_FOCUS."""
@@ -544,8 +544,8 @@ def call_ai_selection(items, top_n=SELECTION_COUNT):
     profile = FOCUS_PROFILES[load_focus()]
     print(f"Selection focus: {profile['label']}")
     priorities_block = "\n".join(f"{i}. {p}" for i, p in enumerate(profile['priorities'], 1))
-    priorities_block += f"\n{len(profile['priorities']) + 1}. 同等质量下，优先发布于最近 {RECENT_PRIORITY_DAYS} 天的内容。普通时效新闻原则上不超过 {GENERAL_LOOKBACK_DAYS} 天；超过 {GENERAL_LOOKBACK_DAYS} 天的内容只有在实操、深度认知或长期影响明显更强时才可入选，最长不超过 {MAX_LOOKBACK_DAYS} 天。"
-    exclusions_block = "\n".join(f"- {e}" for e in profile['exclusions'])
+    priorities_block += f"\n{len(profile['priorities']) + 1}. 时效：优先最近 {RECENT_PRIORITY_DAYS} 天内的事件，原则上不超过 {GENERAL_LOOKBACK_DAYS} 天；只有长期影响明显更强时才放宽到 {MAX_LOOKBACK_DAYS} 天。"
+    exclusions_block = "\n".join(f"- {e}" for e in EXCLUSIONS)
     
     prompt = f"""
 你是一个专业的{profile['label']}热点内容主编。请从以下列表中挑选出前 {top_n} 个最值得做成中文深度文章的选题。
@@ -557,7 +557,7 @@ def call_ai_selection(items, top_n=SELECTION_COUNT):
 - **中间的六个省略号（......）代表了文章中间被省略的部分**。
 - 请务必阅读 `Content` 字段来判断文章是否有实质性内容（干货），不要仅凭标题判断。如果 Content 为空或看起来是毫无意义的占位符，请直接忽略该文章。
 
-{profile['reader']}
+{READER}
 
 优先选题：
 {priorities_block}
@@ -567,7 +567,8 @@ def call_ai_selection(items, top_n=SELECTION_COUNT):
 
 **额外要求**：
 - 避免选择重复的文章（不同平台描述同个事务的文章），如有，选择相对内容最全面的那一篇。
-- {top_n} 个结果应尽量覆盖案例、影响、认知升级、争议、竞争等不同角度，但不得为多样性牺牲质量。
+- 每篇只讲一件事。一篇能撑起「事件事实 → 机制解释 → 趋势判断 → 你该怎么办」四段的，优先于需要拼盘的。
+- {top_n} 个结果应覆盖不同行业或不同角度，但不得为多样性牺牲质量。
 
 请仔细阅读上述内容，挑选出 {top_n} 个 ID。
 **输出格式要求**：
@@ -575,11 +576,11 @@ def call_ai_selection(items, top_n=SELECTION_COUNT):
 - 每个对象包含三个字段：
   - "id": 对应文章的ID (整数)
   - "reason": 推荐理由 (中文字符串，简练概括为什么这篇文章值得读)
-  - "title_zh": 中文标题 (字符串。**必须结合原标题和文章正文内容，重新生成一个更准确、更吸引人的中文总结性标题**，不要只是简单翻译原标题。)
+  - "title_zh": 中文标题 (字符串。**必须结合原标题和正文内容重新生成**，风格参考：直接给判断或反常识提问，如「AI 开始训练 AI，RSI 要来了」「为什么手机才是记忆最好的土壤」；不要用「深度解析」「全面盘点」这类空话，也不要只是翻译原标题。)
 - 结果按推荐顺序排序（最推荐的排在前面）。
 - 格式示例：[
-    {{"id": 12, "reason": "深度解析了OpenAI的最新架构，对理解未来AI发展方向很有帮助", "title_zh": "OpenAI最新架构深度解析：未来AI将走向何方？"}},
-    {{"id": 5, "reason": "非常有趣的AI应用案例，展示了AI在日常生活中的创意用法", "title_zh": "AI还能这么玩？盘点那些脑洞大开的日常生活应用"}}
+    {{"id": 12, "reason": "用官方公布的一手数据说明 AI 正在进入研发执行环节，对判断企业该往哪投有直接参考", "title_zh": "AI 开始训练 AI，RSI 要来了"}},
+    {{"id": 5, "reason": "把记忆能力讲成了产业竞争的关键变量，能解释手机厂商和互联网巨头为什么会正面撞上", "title_zh": "为什么手机才是记忆最好的土壤？"}}
   ]
 - 不要返回任何其他文字。
 

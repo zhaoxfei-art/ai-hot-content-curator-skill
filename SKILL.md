@@ -9,14 +9,16 @@ description: 一个用于发现、筛选和研究 AI/科技与财经/商业领�
 
 ## 选题方向 (Focus)
 
-`resources/content_curator_sources.json` 的 `focus` 字段决定筛选逻辑，当前为 `finance`（财经/商业）。
+`resources/content_curator_sources.json` 的 `focus` 字段决定优先选题，当前为 `consulting`。
 
-- `finance`：财报、商业模式、金融科技、资本市场、SaaS 运营、AI 的商业影响。
-- `ai`：AI 产品与工作流案例、AI 对普通人的影响。
+- `consulting`：企业 IT 投入与数字化规划、系统替换与重构、AI 在企业的落地、产业竞争格局。
+- `finance`：财报与商业模式、财务数字化、金融科技与资本市场。
 
-临时切换：设置环境变量 `CONTENT_FOCUS=ai`（或 `finance`），优先级高于配置文件。
+临时切换：设置环境变量 `CONTENT_FOCUS=finance`（或 `consulting`），优先级高于配置文件。
 
-财经方向的固定来源，已写入配置的「财经/商业深度」分组：
+选题标准（目标读者、排除内容、时效、数量）由对标账号文章反向拆解：一篇只讲一件事，有一手材料与硬数字，落到产业竞争格局和「你该怎么办」。时效优先最近 3 天，不超过 14 天，输出 3 个候选。
+
+来源分两组写入配置：
 
 | 来源 | RSS |
 | --- | --- |
@@ -26,6 +28,13 @@ description: 一个用于发现、筛选和研究 AI/科技与财经/商业领�
 | SaaStr | `https://www.saastr.com/feed/` |
 | TechCrunch Fintech | `https://techcrunch.com/category/fintech/feed/` |
 | Fintech Blueprint | `https://lex.substack.com/feed` |
+| CIO Dive | `https://www.ciodive.com/feeds/news/` |
+| CFO Dive | `https://www.cfodive.com/feeds/news/` |
+| Computerworld | `https://www.computerworld.com/index.rss` |
+| The Register | `https://www.theregister.com/headlines.atom` |
+| InfoQ 中文 | `https://www.infoq.cn/feed` |
+| 华尔街见闻 | `https://dedicated.wallstreetcn.com/rss.xml` |
+| The Economist 财经 | `https://www.economist.com/finance-and-economics/rss.xml` |
 
 ## 工作流
 
